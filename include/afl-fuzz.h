@@ -311,8 +311,8 @@ enum {
 #define STAGE_Splice 18
 #define period_pilot 50000
 // LS:add
-#define interval_time 3600
-#define sampling_time 60
+//#define interval_time 3600
+//#define sampling_time 60
 
 enum {
 
@@ -601,12 +601,17 @@ typedef struct afl_state {
       current_entry,      /* Current queue entry ID           */
       havoc_div,          /* Cycle count divisor for havoc    */
       max_det_extras,     /* deterministic extra count (dicts)*/
-      stored_num,         /* LS:the idx of store files*/
-      sample_num,         /* LS:the sample num*/
-      relative_time,      /*LS:the excute time*/
-      start_sample_time,  /*LS:the start of sample time*/
-      end_sample_time,    /*LS:the end of sample time*/
-      mutate_sum;         /*LS:the sum of mutation operations*/
+      stored_num,         /* LS:the idx of store files        */
+      sample_num,         /* LS:the sample num                */
+      relative_time,      /*LS:the execute time                */
+      start_sample_time,  /*LS:the start of sample time       */
+      end_sample_time,    /*LS:the end of sample time         */
+      mutate_sum,         /*LS:the sum of mutation operations */
+      interval_time,      /*LS:the interval time when sampling*/
+      sampling_time,      /*LS:the sampling time              */
+      log_ndm,            /*LS:flag for logging or not        */
+      ndm_min,            /*LS:the min value of ndm           */
+      ndm_max;            /*LS:the max value of ndm           */
 
   u64 total_crashes,     /* Total number of crashes          */
       saved_crashes,     /* Crashes with unique signatures   */

@@ -1866,7 +1866,6 @@ havoc_stage:
     snprintf(afl->mutation, sizeof(afl->mutation), "%s HAVOC-%u-%u",
              afl->queue_cur->fname, afl->queue_cur->is_ascii, use_stacking);
 #endif
-
     for (i = 0; i < use_stacking; ++i) {
       if (afl->custom_mutators_count) {
         LIST_FOREACH(&afl->custom_mutator_list, struct custom_mutator, {
@@ -1893,7 +1892,8 @@ havoc_stage:
 
     retry_havoc_step: {
       u32 r = rand_below(afl, rand_max), item;
-      fprintf(afl->log_file, "%u ", mutation_array[r]);
+    //LS:log sample series
+//      fprintf(afl->log_file, "%u ", mutation_array[r]);
 
       switch (mutation_array[r]) {
         case MUT_FLIPBIT: {
@@ -2841,11 +2841,16 @@ havoc_stage:
       }
     }
     }
-
+//    fprintf(afl->log_file, "\n");
     afl->mutate_sum += afl->stage_cur_val;
 
-    if (common_fuzz_stuff(afl, out_buf, temp_len)) { goto abandon_entry; }
 
+//    if (common_fuzz_stuff(afl, out_buf, temp_len)) { goto abandon_entry; }
+    if(afl->mutate_sum<afl->ndm_min) continue;
+//    fprintf(afl->log_file,"max:%u,cur:%u\n",afl->stage_max,afl->stage_cur);
+//    fprintf(afl->log_file,"ndm:%u,cur_val:%u\n",afl->mutate_sum,afl->stage_cur_val);
+
+    if (common_fuzz_stuff(afl, out_buf, temp_len)||afl->mutate_sum>afl->ndm_max) { goto abandon_entry; }
     /* out_buf might have been mangled a bit, so let's restore it to its
        original size and shape. */
 

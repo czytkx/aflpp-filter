@@ -1870,16 +1870,19 @@ void setup_dirs_fds(afl_state_t *afl) {
   if (afl->fsrv.dev_urandom_fd < 0) { PFATAL("Unable to open /dev/urandom"); }
 
   // LS:add log file
-  tmp = alloc_printf("%s/log", afl->out_dir);
-  int fd = open(tmp, O_WRONLY | O_CREAT | O_EXCL, DEFAULT_PERMISSION);
-  if (fd < 0) { PFATAL("Unable to create '%s'", tmp); }
-  ck_free(tmp);
-  afl->log_file = fdopen(fd, "w");
+  if(afl->log_ndm){
+    tmp = alloc_printf("%s/ndm_sample.log", afl->out_dir);
+      int fd = open(tmp, O_WRONLY | O_CREAT | O_EXCL, DEFAULT_PERMISSION);
+      if (fd < 0) { PFATAL("Unable to create '%s'", tmp); }
+      ck_free(tmp);
+      afl->log_file = fdopen(fd, "w");
 
-  if (!afl->log_file) { PFATAL("fdopen() failed"); }
+      if (!afl->log_file) { PFATAL("fdopen() failed"); }
 
-  fprintf(afl->log_file, "seed_name,mutate steps\n");
-  fflush(afl->log_file);
+      fprintf(afl->log_file, "id,src,identity,ndm,relative_time,option\n");
+      fflush(afl->log_file);
+  }
+
 
   /* Gnuplot output file. */
 

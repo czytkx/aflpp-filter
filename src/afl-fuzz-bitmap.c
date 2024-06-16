@@ -458,78 +458,107 @@ save_if_interesting(afl_state_t *afl, void *mem, u32 len, u8 fault) {
         afl->relative_time <= afl->end_sample_time) {
       afl->in_sample_time = 1;
     } else if (afl->in_sample_time) {
-      afl->start_sample_time += interval_time;
-      afl->end_sample_time = afl->start_sample_time + sampling_time;
+      afl->start_sample_time += afl->interval_time;
+      afl->end_sample_time = afl->start_sample_time + afl->sampling_time;
       afl->in_sample_time = 0;
       afl->sample_num++;
     }
     //  OKF("relative_time:%llu",afl->relative_time);
     /* LS: try to store files*/
 
-    if (afl->in_sample_time) {
-      //      OKF("start to store file");
+//    if (afl->in_sample_time) {
+//      //      OKF("start to store file");
       afl->stored_num += 1;
-
-      if (afl->splicing_with >= 0) {
-        //              store_fn =
-        //                  alloc_printf("%s/stores/src:%06u,%06d,idx:%llu,op:%s,relative_time:%llu,sample_num:%02d",
-        //                               afl->out_dir, afl->current_entry,
-        //                               afl->splicing_with, (afl->prev_run_time
-        //                               + get_cur_time() - afl->start_time),
-        //                               afl->stage_short,afl->relative_time,afl->sample_num);
-        store_fn = alloc_printf(
-            "%s/stores/store_id:%09u,NDM:%07u,%s,sample_num:%02d", afl->out_dir,
-            afl->stored_num, afl->mutate_sum,
-            describe_op(afl, new_bits, NAME_MAX - strlen("id:000000,")),
-            afl->sample_num);
-      } else {
-        //        store_fn =
-        //                  alloc_printf("%s/stores/src:%06u,idx:%llu,op:%s,relative_time:%llu,sample_num:%02d",
-        //                               afl->out_dir, afl->current_entry,
-        //                               (afl->prev_run_time + get_cur_time() -
-        //                               afl->start_time),
-        //                               afl->stage_short,afl->relative_time,afl->sample_num);
-        store_fn = alloc_printf(
-            "%s/stores/store_id:%09u,NDM:%07u,%s,sample_num:%02d", afl->out_dir,
-            afl->stored_num, afl->mutate_sum,
-            describe_op(afl, new_bits, NAME_MAX - strlen("id:000000,")),
-            afl->sample_num);
-      }
-
-      //  OKF("name a file");
-
-      fd = open(store_fn, O_WRONLY | O_CREAT | O_EXCL, DEFAULT_PERMISSION);
-      //  OKF("open a  file");
-      if (unlikely(fd < 0)) { PFATAL("Unable to create '%s'", store_fn); }
-      ck_write(fd, mem, len, store_fn);
-      close(fd);
-
-      //    OKF("stored one file");
-      //    afl->stop_soon = 1;
-    }
+//
+//      if (afl->splicing_with >= 0) {
+//        //              store_fn =
+//        //                  alloc_printf("%s/stores/src:%06u,%06d,idx:%llu,op:%s,relative_time:%llu,sample_num:%02d",
+//        //                               afl->out_dir, afl->current_entry,
+//        //                               afl->splicing_with, (afl->prev_run_time
+//        //                               + get_cur_time() - afl->start_time),
+//        //                               afl->stage_short,afl->relative_time,afl->sample_num);
+//        store_fn = alloc_printf(
+//            "%s/stores/store_id:%09u,NDM:%07u,%s,sample_num:%02d", afl->out_dir,
+//            afl->stored_num, afl->mutate_sum,
+//            describe_op(afl, new_bits, NAME_MAX - strlen("id:000000,")),
+//            afl->sample_num);
+//      } else {
+//        //        store_fn =
+//        //                  alloc_printf("%s/stores/src:%06u,idx:%llu,op:%s,relative_time:%llu,sample_num:%02d",
+//        //                               afl->out_dir, afl->current_entry,
+//        //                               (afl->prev_run_time + get_cur_time() -
+//        //                               afl->start_time),
+//        //                               afl->stage_short,afl->relative_time,afl->sample_num);
+//        store_fn = alloc_printf(
+//            "%s/stores/store_id:%09u,NDM:%07u,%s,sample_num:%02d", afl->out_dir,
+//            afl->stored_num, afl->mutate_sum,
+//            describe_op(afl, new_bits, NAME_MAX - strlen("id:000000,")),
+//            afl->sample_num);
+//      }
+//
+//      //  OKF("name a file");
+//
+//      fd = open(store_fn, O_WRONLY | O_CREAT | O_EXCL, DEFAULT_PERMISSION);
+//      //  OKF("open a  file");
+//      if (unlikely(fd < 0)) { PFATAL("Unable to create '%s'", store_fn); }
+//      ck_write(fd, mem, len, store_fn);
+//      close(fd);
+//
+//      //    OKF("stored one file");
+//      //    afl->stop_soon = 1;
+//    }
 
     if (likely(!new_bits)) {
       if (unlikely(afl->crash_mode)) { ++afl->total_crashes; }
+
+    if(afl->log_ndm){
+        if (afl->splicing_with >= 0) {
+        //        sprintf(ret + strlen(ret), "+%06d", afl->splicing_with);
+                fprintf(afl->log_file, "%09u,%06u+%06d,boring,%07u,%llu,%s\n",afl->stored_num,afl->current_entry,afl->splicing_with,
+                        afl->mutate_sum,(get_cur_time() + afl->prev_run_time - afl->start_time)/1000,afl->stage_short);
+              }else{
+                fprintf(afl->log_file, "%09u,%06u,boring,%07u,%llu,%s\n",afl->stored_num,afl->current_entry,
+                        afl->mutate_sum,(get_cur_time() + afl->prev_run_time - afl->start_time)/1000,afl->stage_short);
+              }
+    }
+
+
       return 0;
     }
 
   save_to_queue:
 
+    if(afl->log_ndm){
+      if (afl->splicing_with >= 0) {
+            //        sprintf(ret + strlen(ret), "+%06d", afl->splicing_with);
+            fprintf(afl->log_file, "%09u,%06u+%06d,interesting,%07u,%llu,%s\n",afl->stored_num,afl->current_entry,afl->splicing_with,
+                                                                                                                    afl->mutate_sum,(get_cur_time() + afl->prev_run_time - afl->start_time)/1000,afl->stage_short);
+          }else{
+            fprintf(afl->log_file, "%09u,%06u,interesting,%07u,%llu,%s\n",afl->stored_num,afl->current_entry,
+                    afl->mutate_sum,(get_cur_time() + afl->prev_run_time - afl->start_time)/1000,afl->stage_short);
+          }
+    }
+
 #ifndef SIMPLE_FILES
 
-    if (afl->in_sample_time) {
+//    if (afl->in_sample_time) {
+//      queue_fn = alloc_printf("%s/queue/id:%06u,store_id:%09u,NDM:%07u,%s",
+//                              afl->out_dir, afl->queued_items, afl->stored_num,
+//                              afl->mutate_sum,
+//                              describe_op(afl, new_bits + is_timeout,
+//                                          NAME_MAX - strlen("id:000000,")));
+//    } else {
+//      queue_fn = alloc_printf("%s/queue/id:%06u,NDM:%07u,%s", afl->out_dir,
+//                              afl->queued_items, afl->mutate_sum,
+//                              describe_op(afl, new_bits + is_timeout,
+//                                          NAME_MAX - strlen("id:000000,")));
+//    }
+
       queue_fn = alloc_printf("%s/queue/id:%06u,store_id:%09u,NDM:%07u,%s",
                               afl->out_dir, afl->queued_items, afl->stored_num,
                               afl->mutate_sum,
                               describe_op(afl, new_bits + is_timeout,
                                           NAME_MAX - strlen("id:000000,")));
-    } else {
-      queue_fn = alloc_printf("%s/queue/id:%06u,NDM:%07u,%s", afl->out_dir,
-                              afl->queued_items, afl->mutate_sum,
-                              describe_op(afl, new_bits + is_timeout,
-                                          NAME_MAX - strlen("id:000000,")));
-    }
-
 #else
 
     queue_fn =

@@ -1199,11 +1199,30 @@ int main(int argc, char **argv_orig, char **envp) {
   }
 
   // LS:initialize some variables
+  if (getenv("DIFIL_SAMP_Y")) {
+    afl->interval_time = atoi(getenv("DIFIL_SAMP_Y"));
+  } else {
+    afl->interval_time = 3600;
+  }
+  if (getenv("DIFIL_SAMP_Z")) {
+    afl->sampling_time = atoi(getenv("DIFIL_SAMP_Z"));
+  } else {
+    afl->sampling_time = 60;
+  }
+  if (getenv("AFL_NDM_LOG")) {
+    afl->log_ndm = 1;
+  } else {
+    afl->log_ndm = 0;
+  }
+
+  if(getenv("AFL_NDM_MIN")) { afl->ndm_min = atoi(getenv("AFL_NDM_MIN")); }
+  if(getenv("AFL_NDM_MAX")) { afl->ndm_max = atoi(getenv("AFL_NDM_MAX")); }
   afl->stored_num = 0;
   afl->sample_num = 0;
   afl->start_sample_time = 0;
-  afl->end_sample_time = afl->start_sample_time + sampling_time;
-  afl->in_sample_time = 0;
+  afl->end_sample_time = afl->start_sample_time + afl->sampling_time;
+  afl->in_sample_time =0;
+
 
   if (afl->sync_id && strcmp(afl->sync_id, "addseeds") == 0) {
     FATAL("-M/-S name 'addseeds' is a reserved name, choose something else");
@@ -2381,10 +2400,11 @@ int main(int argc, char **argv_orig, char **envp) {
           afl->queue_cur = afl->queue_buf[afl->current_entry];
         }
       }
+      //LS:log file
       afl->mutate_sum = 0;
-      fprintf(afl->log_file, "%s ", afl->queue_cur->fname);
+//      fprintf(afl->log_file, "%s ", afl->queue_cur->fname);
       skipped_fuzz = fuzz_one(afl);
-      fprintf(afl->log_file, "\n");
+//      fprintf(afl->log_file, "\n");
   #ifdef INTROSPECTION
       ++afl->queue_cur->stats_selected;
 
